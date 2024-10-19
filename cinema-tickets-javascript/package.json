@@ -7,6 +7,28 @@
   },
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
   },
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/earlmaro/cinema-tickets-javascript.git"
+  },
+  "keywords": [
+    "cinema",
+    "ticket"
+  ],
+  "author": "Precious Agoma",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/earlmaro/cinema-tickets-javascript/issues"
+  },
+  "homepage": "https://github.com/earlmaro/cinema-tickets-javascript#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
 }
