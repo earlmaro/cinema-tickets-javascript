@@ -1,4 +1,4 @@
-import TicketTypes from '../../constants/TicketTypes.js';
+import ticketTypes from '../../constants/TicketTypes.js';
 import TicketTypeRequest from './lib/TicketTypeRequest.js';
 import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentService.js';
 import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
@@ -9,6 +9,8 @@ export default class TicketService {
    */
   #reservations = [];
   #totalAmountToPay;
+  #leastId = 0;
+  #maxNumberOfTicket = 25;
   purchaseTickets(accountId, ...ticketTypeRequests) {
     try {
       this.#validateAccountId(accountId);
@@ -17,17 +19,16 @@ export default class TicketService {
       this.#validateTicketTypes(ticketTypeRequests);
       this.#createReservations(ticketTypeRequests);
       this.#totalAmountToPay = this.#calculateTotalAmountToPay(ticketTypeRequests);
-      this.#makePayment(accountId);
+      return this.#makePayment(accountId);
     } catch (error) {
-      throw new InvalidPurchaseException(error.message);
+      throw error;
     }
-    // throws InvalidPurchaseException
   }
 
   // Private method to validate account ID
   #validateAccountId(accountId) {
-    if (!Number.isInteger(accountId) || accountId <= 0) {
-      throw new Error('Invalid accountId. It must be a positive integer.');
+    if (!Number.isInteger(accountId) || accountId < this.#leastId) {
+      throw new InvalidPurchaseException(`Invalid accountId. It must be a positive integer greater than ${this.#leastId}.`, 400, 'PURCHASE_NOT_ALLOWED');
     }
   }
 
@@ -35,11 +36,11 @@ export default class TicketService {
     return ticketTypeRequests.reduce((total, item) => total + item.noOfTicket, 0);
   }
   #getNoOfTickets(ticketTypeRequests) {
-    return Object.values(TicketTypes);
+    return Object.values(ticketTypes);
   }
   #validateTotalTickets(totalTickets) {
-    if (totalTickets > 25) {
-      throw new Error('Cannot request more than 25 tickets.');
+    if (totalTickets > this.#maxNumberOfTicket) {
+      throw new InvalidPurchaseException(`Cannot request more than ${this.#maxNumberOfTicket} tickets.`, 400, 'PURCHASE_NOT_ALLOWED');
     }
   }
 
@@ -47,9 +48,9 @@ export default class TicketService {
     let containsDependentTicket = false; // Flag for ticket with cannotBeAlone = true
     let containsIndependentTicket = false; // Flag for ticket with cannotBeAlone = false
     ticketTypeRequests.forEach(ticket => {
-      const ticketDetails = TicketTypes.find(t => t.slug === ticket.slug);
+      const ticketDetails = ticketTypes.find(t => t.slug === ticket.slug);
       if (!ticketDetails) {
-        throw new InvalidPurchaseException(`Invalid ticket type: ${ticket.slug}`);
+        throw new InvalidPurchaseException(`Invalid ticket type: ${ticket.slug}`, 400, 'PURCHASE_NOT_ALLOWED');
       }
 
       // Update flags based on cannotBeAlone attribute
@@ -77,11 +78,11 @@ export default class TicketService {
 
   #makePayment(accountId) {
     if(this.#reservations.length < 1){
-      throw new Error('No tickets found.');
+      throw new InvalidPurchaseException('We reservations found', 400, 'PURCHASE_NOT_ALLOWED');
     }
     let payment = new TicketPaymentService();
-    payment.makePayment(accountId, this.#totalAmountToPay);
-    throw new TypeError('Processing payment...');
+    // return payment.makePayment(accountId, this.#totalAmountToPay);
+    return 'Payment processing....';
   }
 
 }

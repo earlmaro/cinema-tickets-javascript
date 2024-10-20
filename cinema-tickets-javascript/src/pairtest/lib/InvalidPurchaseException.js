@@ -17,4 +17,14 @@ export default class InvalidPurchaseException extends Error {
             Error.captureStackTrace(this, this.constructor);
         }
     }
+
+    // Additional method to get the status code if needed
+    getStatusCode() {
+        return this.statusCode;
+    }
+
+    // Method to get the error code if needed
+    getErrorCode() {
+        return this.errorCode;
+    }
 }
