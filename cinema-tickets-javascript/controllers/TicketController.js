@@ -6,6 +6,7 @@ const ticketService = new TicketService();
 
 export const getAllTicketTypes = (req, res, next) => {
     try {
+        validateTicketTypes();
         res.status(200).json({ TicketTypes });
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -13,6 +14,7 @@ export const getAllTicketTypes = (req, res, next) => {
 };
 export const reserveTickets = (req, res, next) => {
     try {
+        validateTicketTypes();
         const { accountId, ticketTypeRequests } = req.body;
 
         // Basic validation: check if accountId exists and is a number
@@ -24,7 +26,7 @@ export const reserveTickets = (req, res, next) => {
         if (!Array.isArray(ticketTypeRequests)) {
             return res.status(400).json({ error: 'ticketTypeRequests must be an array' });
         }
-        const response = ticketService.purchaseTickets(accountId, ...ticketTypeRequests);
+        ticketService.purchaseTickets(accountId, ...ticketTypeRequests);
         return;
         res.status(200).json(req.body );
     } catch (error) {
@@ -32,18 +34,8 @@ export const reserveTickets = (req, res, next) => {
     }
 };
 
-// exports.getTicketss = (req, res, next) => {
-//     try {
-//         // For example, extracting accountId and ticket requests from the request body
-//         const { accountId, ticketRequests } = req.body;
-//
-//         // Call the service to handle ticket purchase logic
-//         const response = ticketService.purchaseTickets(accountId, ...ticketRequests);
-//
-//         // Send back the response as JSON
-//         res.status(200).json(response);
-//     } catch (error) {
-//         // Handle any errors thrown by the service
-//         res.status(400).json({ error: error.message });
-//     }
-// };
+export const validateTicketTypes = () => {
+    if (TicketTypes.length < 1) {
+        throw new TypeError('We are unable to process your order at the moment');
+    }
+};

@@ -1,4 +1,6 @@
 import TicketTypes from '../../constants/TicketTypes.js';
+import TicketTypeRequest from './lib/TicketTypeRequest.js';
+import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentService.js';
 import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 
 export default class TicketService {
@@ -6,6 +8,7 @@ export default class TicketService {
    * Should only have private methods other than the one below.
    */
   #reservations = [];
+  #totalAmountToPay;
   purchaseTickets(accountId, ...ticketTypeRequests) {
     try {
       this.#validateAccountId(accountId);
@@ -13,10 +16,8 @@ export default class TicketService {
       this.#validateTotalTickets(totalTickets);
       this.#validateTicketTypes(ticketTypeRequests);
       this.#createReservations(ticketTypeRequests);
-      console.log(totalTickets);
-      //
-      // // Here, you might call payment or seat reservation services later
-      // return { reservations: this.#reservations, totalTickets };
+      this.#totalAmountToPay = this.#calculateTotalAmountToPay(ticketTypeRequests);
+      this.#makePayment(accountId);
     } catch (error) {
       throw new InvalidPurchaseException(error.message);
     }
@@ -64,10 +65,23 @@ export default class TicketService {
   }
 
   #createReservations(ticketTypeRequests) {
-    if (totalTickets > 25) {
-      throw new Error('Cannot request more than 25 tickets.');
-    }
+    this.#reservations = ticketTypeRequests.map(request => {
+      const { slug, noOfTicket } = request;
+      return new TicketTypeRequest(slug, noOfTicket);
+    });
   }
 
+  #calculateTotalAmountToPay() {
+    return this.#reservations.reduce((total, item) => total + (item.getNoOfTickets() * item.getPrice()), 0);
+  }
+
+  #makePayment(accountId) {
+    if(this.#reservations.length < 1){
+      throw new Error('No tickets found.');
+    }
+    let payment = new TicketPaymentService();
+    payment.makePayment(accountId, this.#totalAmountToPay);
+    throw new TypeError('Processing payment...');
+  }
 
 }

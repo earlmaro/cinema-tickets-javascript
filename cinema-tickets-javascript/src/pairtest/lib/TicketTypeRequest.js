@@ -4,7 +4,8 @@
 import TicketTypes from '../../../constants/TicketTypes.js';
 export default class TicketTypeRequest {
   #type;
-
+  #slug;
+  #price;
   #noOfTickets;
   constructor(type, noOfTickets) {
     const ticketType = TicketTypes.find(ticket => ticket.slug === type);
@@ -17,7 +18,13 @@ export default class TicketTypeRequest {
       throw new TypeError('noOfTickets must be an integer');
     }
 
-    this.type = type;
+    if (!Number.isInteger(ticketType.price)) {
+      throw new TypeError('price of ticket must be an integer)');
+    }
+
+    this.#type = ticketType.type;
+    this.#slug = ticketType.slug;
+    this.#price = ticketType.price;
     this.#noOfTickets = noOfTickets;
 
     Object.freeze(this);
@@ -27,8 +34,15 @@ export default class TicketTypeRequest {
     return this.#noOfTickets;
   }
 
-  // Static method to get all ticket types from TicketTypes.js
-  static getAllTicketTypes() {
-    return Object.values(TicketTypes);
+  getTicketType() {
+    return this.#type;
+  }
+
+  getTicketSlug() {
+    return this.#slug;
+  }
+
+  getPrice() {
+    return this.#price;
   }
 }
