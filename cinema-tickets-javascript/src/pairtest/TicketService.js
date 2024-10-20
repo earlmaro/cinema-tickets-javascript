@@ -9,9 +9,9 @@ export default class TicketService {
    */
   #reservations = [];
   #totalAmountToPay;
-  #leastId = 0;
-  #maxNumberOfTicket = 25;
-  purchaseTickets(accountId, ...ticketTypeRequests) {
+  static #leastId = 0;
+  static #maxNumberOfTicket = 25;
+  async purchaseTickets(accountId, ...ticketTypeRequests) {
     try {
       this.#validateAccountId(accountId);
       const totalTickets = this.#calculateTotalTickets(ticketTypeRequests);
@@ -19,7 +19,12 @@ export default class TicketService {
       this.#validateTicketTypes(ticketTypeRequests);
       this.#createReservations(ticketTypeRequests);
       this.#totalAmountToPay = this.#calculateTotalAmountToPay(ticketTypeRequests);
-      return this.#makePayment(accountId);
+      const paymentResult = await this.#makePayment(accountId);
+      return {
+        message: 'Purchase successful',
+        paymentResult,
+        totalAmount: this.#totalAmountToPay / 100
+      };
     } catch (error) {
       throw error;
     }
@@ -27,7 +32,7 @@ export default class TicketService {
 
   // Private method to validate account ID
   #validateAccountId(accountId) {
-    if (!Number.isInteger(accountId) || accountId < this.#leastId) {
+    if (!Number.isInteger(accountId) || accountId < TicketService.#leastId) {
       throw new InvalidPurchaseException(`Invalid accountId. It must be a positive integer greater than ${this.#leastId}.`, 400, 'PURCHASE_NOT_ALLOWED');
     }
   }
@@ -39,8 +44,8 @@ export default class TicketService {
     return Object.values(ticketTypes);
   }
   #validateTotalTickets(totalTickets) {
-    if (totalTickets > this.#maxNumberOfTicket) {
-      throw new InvalidPurchaseException(`Cannot request more than ${this.#maxNumberOfTicket} tickets.`, 400, 'PURCHASE_NOT_ALLOWED');
+    if (totalTickets > TicketService.#maxNumberOfTicket) {
+      throw new InvalidPurchaseException(`Cannot request more than ${TicketService.#maxNumberOfTicket} tickets.`, 400, 'PURCHASE_NOT_ALLOWED');
     }
   }
 
@@ -76,7 +81,7 @@ export default class TicketService {
     return this.#reservations.reduce((total, item) => total + (item.getNoOfTickets() * item.getPrice()), 0);
   }
 
-  #makePayment(accountId) {
+  async #makePayment(accountId) {
     if(this.#reservations.length < 1){
       throw new InvalidPurchaseException('We reservations found', 400, 'PURCHASE_NOT_ALLOWED');
     }

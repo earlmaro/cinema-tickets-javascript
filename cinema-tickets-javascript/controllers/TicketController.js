@@ -16,7 +16,7 @@ export const getAllTicketTypes = (req, res, next) => {
         next(error);
     }
 };
-export const reserveTickets = (req, res, next) => {
+export const reserveTickets = async (req, res, next) => {
     try {
         validateTicketTypes();
         const { accountId, ticketTypeRequests } = req.body;
@@ -30,7 +30,7 @@ export const reserveTickets = (req, res, next) => {
         if (!Array.isArray(ticketTypeRequests)) {
             throw new InvalidPurchaseException('ticketTypeRequests must be an array', 400, 'PURCHASE_NOT_ALLOWED');
         }
-        let data = ticketService.purchaseTickets(accountId, ...ticketTypeRequests);
+        let data = await ticketService.purchaseTickets(accountId, ...ticketTypeRequests);
         res.status(200).json({
             success: true,
             message: data

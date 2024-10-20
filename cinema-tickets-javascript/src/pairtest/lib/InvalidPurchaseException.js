@@ -12,6 +12,9 @@ export default class InvalidPurchaseException extends Error {
         // Assign a custom error code to differentiate error types
         this.errorCode = errorCode;
 
+        // Assign status false
+        this.status = false;
+
         // Capture stack trace for debugging (optional)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);

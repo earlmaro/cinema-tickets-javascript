@@ -21,6 +21,7 @@ app.use((err, req, res, next) => {
 
     if (err instanceof InvalidPurchaseException) {
         res.status(err.getStatusCode()).json({
+            status: false,
             errorCode: err.getErrorCode(),
             message: err.message,
         });
