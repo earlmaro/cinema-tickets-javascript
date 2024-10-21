@@ -33,7 +33,7 @@ export default class TicketService {
   // Private method to validate account ID
   #validateAccountId(accountId) {
     if (!Number.isInteger(accountId) || accountId < TicketService.#leastId) {
-      throw new InvalidPurchaseException(`Invalid accountId. It must be a positive integer greater than ${this.#leastId}.`, 400, 'PURCHASE_NOT_ALLOWED');
+      throw new InvalidPurchaseException(`Invalid accountId. It must be a positive integer greater than ${TicketService.#leastId}.`, 400, 'PURCHASE_NOT_ALLOWED');
     }
   }
 
