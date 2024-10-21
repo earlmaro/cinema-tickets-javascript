@@ -11,6 +11,8 @@ const app = express();
 // Body parser middleware
 app.use(express.json());
 
+app.use(express.static('public'));
+
 // Mount ticket router
 app.use('/api/v1/tickets', ticketRoute);
 

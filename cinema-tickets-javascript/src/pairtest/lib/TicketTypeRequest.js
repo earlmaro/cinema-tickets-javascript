@@ -1,25 +1,27 @@
 /**
  * Immutable Object.
  */
-import TicketTypes from '../../../constants/TicketTypes.js';
+import ticketTypes from '../../../constants/TicketTypes.js';
+import InvalidPurchaseException from "./InvalidPurchaseException.js";
 export default class TicketTypeRequest {
   #type;
   #slug;
   #price;
   #noOfTickets;
   constructor(type, noOfTickets) {
-    const ticketType = TicketTypes.find(ticket => ticket.slug === type);
+    const ticketType = ticketTypes.find(ticket => ticket.slug === type);
 
     if (!ticketType) {
-      throw new TypeError(`type must be ${this.TICKET_TYPES.slice(0, -1).join(', ')}, or ${this.TICKET_TYPES.slice(-1)}`);
+      const availableTypes = ticketTypes.map(ticket => ticket.slug);
+      throw new InvalidPurchaseException(`type must be ${availableTypes.slice(0, -1).join(', ')}, or ${availableTypes.slice(-1)}`);
     }
 
     if (!Number.isInteger(noOfTickets)) {
-      throw new TypeError('noOfTickets must be an integer');
+      throw new InvalidPurchaseException('noOfTickets must be an integer');
     }
 
     if (!Number.isInteger(ticketType.price)) {
-      throw new TypeError('price of ticket must be an integer)');
+      throw new InvalidPurchaseException('price of ticket must be an integer)');
     }
 
     this.#type = ticketType.type;
