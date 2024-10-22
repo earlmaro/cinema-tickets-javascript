@@ -46,7 +46,7 @@ describe('TicketService', () => {
             await ticketService.purchaseTickets(accountId, infantTicket, childTicket);
         } catch (error) {
             expect(error).to.be.instanceOf(InvalidPurchaseException);
-            expect(error.message).to.equal('Tickets that cannot be alone (like infants) must be accompanied by another ticket.');
+            expect(error.message).to.equal('Tickets that cannot be alone (like infants) must be accompanied by an adult ticket.');
             expect(error.getErrorCode()).to.equal('INVALID_PURCHASE');
         }
     });

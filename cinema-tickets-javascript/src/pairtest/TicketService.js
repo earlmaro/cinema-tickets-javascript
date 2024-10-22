@@ -74,7 +74,7 @@ export default class TicketService {
       }
     })
     if (containsDependentTicket && !containsIndependentTicket) {
-      throw new InvalidPurchaseException('Tickets that cannot be alone (like infants) must be accompanied by another ticket.');
+      throw new InvalidPurchaseException('Tickets that cannot be alone (like infants) must be accompanied by an adult ticket.');
     }
   }
 
