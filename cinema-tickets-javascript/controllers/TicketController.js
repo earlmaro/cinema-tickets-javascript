@@ -2,12 +2,9 @@ import TicketService from '../src/pairtest/TicketService.js';
 import ticketTypes from '../constants/TicketTypes.js';
 import InvalidPurchaseException from '../src/pairtest/lib/InvalidPurchaseException.js';
 
-const ticketService = new TicketService();
-
 export const getAllTicketTypes = (req, res, next) => {
     try {
         validateTicketTypes();
-
         const ticketTypesInPounds = ticketTypes.map(ticket => ({
             ...ticket,
             price: (ticket.price / 100)// Converts pence to pounds
@@ -24,6 +21,7 @@ export const getAllTicketTypes = (req, res, next) => {
 export const reserveTickets = async (req, res, next) => {
     try {
         validateTicketTypes();
+        const ticketService = new TicketService();
         const { accountId, ticketTypeRequests } = req.body;
 
         // Basic validation: check if accountId exists and is a number
@@ -36,12 +34,6 @@ export const reserveTickets = async (req, res, next) => {
             throw new InvalidPurchaseException('ticketTypeRequests must be an array', 400, 'PURCHASE_NOT_ALLOWED');
         }
 
-        // ensure noOfTicket is greater than 0
-        ticketTypeRequests.forEach(ticketRequest => {
-            if (ticketRequest.noOfTicket <= 0) {
-                throw new InvalidPurchaseException(`noOfTicket must be greater than 0 for ticket type: ${ticketRequest.slug}`, 400, 'PURCHASE_NOT_ALLOWED');
-            }
-        });
         let data = await ticketService.purchaseTickets(accountId, ...ticketTypeRequests);
         res.status(200).json({
             success: true,

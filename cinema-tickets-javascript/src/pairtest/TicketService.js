@@ -22,11 +22,10 @@ export default class TicketService {
       this.#createReservations(ticketTypeRequests);
       this.#totalAmountToPay = this.#calculateTotalAmountToPay(ticketTypeRequests);
       const paymentResult = await this.#makePayment(accountId);
-      return {
-        message: 'Purchase successful',
-        paymentResult,
-        totalAmount: this.#totalAmountToPay / 100
-      };
+
+      // Reserve seats if payment succeeds
+      return paymentResult ? this.#finalizeReservation(accountId) : this.#handlePaymentFailure();
+
     } catch (error) {
       throw error;
     }
@@ -59,6 +58,13 @@ export default class TicketService {
       if (!ticketDetails) {
         throw new InvalidPurchaseException(`Invalid ticket type: ${ticket.slug}`, 400, 'PURCHASE_NOT_ALLOWED');
       }
+
+      // ensure noOfTicket is greater than 0
+      ticketTypeRequests.forEach(ticketRequest => {
+        if (ticketRequest.noOfTicket <= 0) {
+          throw new InvalidPurchaseException(`noOfTicket must be greater than 0 for ticket type: ${ticketRequest.slug}`, 400, 'PURCHASE_NOT_ALLOWED');
+        }
+      });
 
       // Update flags based on cannotBeAlone attribute
       if (ticketDetails.cannotBeAlone) {
@@ -94,20 +100,40 @@ export default class TicketService {
 
   async #makePayment(accountId) {
     if(this.#reservations.length < 1){
-      throw new InvalidPurchaseException('We reservations found', 400, 'PURCHASE_NOT_ALLOWED');
+      throw new InvalidPurchaseException('No reservations found', 400, 'PURCHASE_NOT_ALLOWED');
     }
     let payment = new TicketPaymentService();
     // return payment.makePayment(accountId, this.#totalAmountToPay);
     return true;
   }
 
-  async #reserveSeats(accountId) {
-    if(this.#reservations.length < 1){
-      throw new InvalidPurchaseException('We reservations found', 400, 'PURCHASE_NOT_ALLOWED');
+  #validateSeatReservation() {
+    if(this.#reservations.length < 1 || this.#seats < 1){
+      throw new InvalidPurchaseException('No seats to reserve or no reservations found.', 400, 'SEAT_RESERVATION_FAILED');
     }
+  }
+
+  async #finalizeReservation(accountId) {
+    this.#validateSeatReservation();
+    return this.#reserveSeats(accountId);
+  }
+
+  async #reserveSeats(accountId) {
     let seatReservation = new SeatReservationService();
     // return seatReservation.makePayment(accountId, this.#seats);
-    return 'Payment processing....';
+    return {
+      message: 'Purchase successful',
+      status: true,
+      reservedSeats: this.#seats,
+      totalAmount: this.#totalAmountToPay / 100
+    };
+  }
+
+  #handlePaymentFailure() {
+    return {
+      message: 'Payment failed',
+      status: false,
+    };
   }
 
 }

@@ -115,4 +115,28 @@ describe('TicketService', () => {
         }
     });
 
+    // 1. Test normal seat reservation flow for non-infant tickets
+    it('should reserve seats correctly when purchasing non-infant tickets', async () => {
+        const result = await ticketService.purchaseTickets(1, { slug: 'adult', noOfTicket: 2 });
+        expect(result).to.have.property('reservedSeats', 2);  // 2 adult tickets = 2 seats
+        expect(result).to.have.property('status', true);
+        expect(result).to.have.property('totalAmount', 50); // 2500 * 2 tickets => 5000 (in cents, convert to dollars/pounds)
+    });
+
+    // 2. Test that only non-infant tickets reserve seats (infant tickets don't count)
+    it('should not reserve seats for infant tickets', async () => {
+        const infantTicket = {
+            slug: 'infant',
+            noOfTicket: 1
+        };
+
+        const adultTicket = {
+            slug: 'adult',
+            noOfTicket: 2
+        };
+        const result = await ticketService.purchaseTickets(1, infantTicket, adultTicket);
+        expect(result).to.have.property('reservedSeats', 2);  // Infant tickets don't reserve seats
+        expect(result).to.have.property('status', true);
+        expect(result).to.have.property('totalAmount', 50); // 0 amount for infant tickets
+    });
 });
