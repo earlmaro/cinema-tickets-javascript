@@ -29,7 +29,7 @@ describe('TicketService', () => {
     });
 
     // Infants cannot be bought alone
-    it('should throw an InvalidPurchaseException if an infant ticket is bought without an accompanying adult or child ticket', async () => {
+    it('should throw an InvalidPurchaseException if an infant or child ticket is bought without an accompanying adult ticket', async () => {
         const accountId = 1;
 
         const infantTicket = {
@@ -37,8 +37,13 @@ describe('TicketService', () => {
             noOfTicket: 2
         };
 
+        const childTicket = {
+            slug: 'infant',
+            noOfTicket: 3
+        };
+
         try {
-            await ticketService.purchaseTickets(accountId, infantTicket);
+            await ticketService.purchaseTickets(accountId, infantTicket, childTicket);
         } catch (error) {
             expect(error).to.be.instanceOf(InvalidPurchaseException);
             expect(error.message).to.equal('Tickets that cannot be alone (like infants) must be accompanied by another ticket.');
@@ -47,7 +52,7 @@ describe('TicketService', () => {
     });
 
     // Test case with accompanying adult ticket (should pass without throwing an error)
-    it('should allow an infant ticket when accompanied by an adult or child ticket', async () => {
+    it('should allow an infant or child ticket when accompanied by an adult ', async () => {
         const accountId = 1;
 
         const infantTicket = {
@@ -90,6 +95,22 @@ describe('TicketService', () => {
         } catch (error) {
             expect(error).to.be.instanceOf(InvalidPurchaseException);
             expect(error.message).to.equal('Cannot request more than 25 tickets.');
+            expect(error.getErrorCode()).to.equal('PURCHASE_NOT_ALLOWED');
+        }
+    });
+
+    it('should throw an InvalidPurchaseException if noOfTicket is less than or equal to 0', async () => {
+        const validAccountId = 1; // Assuming 1 is a valid accountId
+        const invalidTicketRequest = {
+            slug: 'adult',
+            noOfTicket: 0 // Invalid number of tickets
+        };
+
+        try {
+            await ticketService.purchaseTickets(validAccountId, invalidTicketRequest);
+        } catch (error) {
+            expect(error).to.be.instanceOf(InvalidPurchaseException);
+            expect(error.message).to.equal('noOfTicket must be greater than 0 for ticket type: adult');
             expect(error.getErrorCode()).to.equal('PURCHASE_NOT_ALLOWED');
         }
     });

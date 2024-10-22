@@ -1,6 +1,7 @@
 import ticketTypes from '../../constants/TicketTypes.js';
 import TicketTypeRequest from './lib/TicketTypeRequest.js';
 import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentService.js';
+import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService.js';
 import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 
 export default class TicketService {
@@ -11,6 +12,7 @@ export default class TicketService {
   #totalAmountToPay;
   static #leastId = 0;
   static #maxNumberOfTicket = 25;
+  #seats = 0;
   async purchaseTickets(accountId, ...ticketTypeRequests) {
     try {
       this.#validateAccountId(accountId);
@@ -73,8 +75,17 @@ export default class TicketService {
   #createReservations(ticketTypeRequests) {
     this.#reservations = ticketTypeRequests.map(request => {
       const { slug, noOfTicket } = request;
+      this.#updateSeatCount(slug, noOfTicket);
       return new TicketTypeRequest(slug, noOfTicket);
     });
+  }
+
+  // New method to increase the seat count
+  #updateSeatCount(slug, noOfTicket) {
+    const ticketDetails = ticketTypes.find(t => t.slug === slug);
+    if (ticketDetails && ticketDetails.type !== 'Infant') {
+      this.#seats += noOfTicket;  // Increase seat count for non-infant tickets
+    }
   }
 
   #calculateTotalAmountToPay() {
@@ -87,6 +98,15 @@ export default class TicketService {
     }
     let payment = new TicketPaymentService();
     // return payment.makePayment(accountId, this.#totalAmountToPay);
+    return true;
+  }
+
+  async #reserveSeats(accountId) {
+    if(this.#reservations.length < 1){
+      throw new InvalidPurchaseException('We reservations found', 400, 'PURCHASE_NOT_ALLOWED');
+    }
+    let seatReservation = new SeatReservationService();
+    // return seatReservation.makePayment(accountId, this.#seats);
     return 'Payment processing....';
   }
 
